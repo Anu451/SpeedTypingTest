@@ -1,106 +1,76 @@
-const sentences = `The quick brown fox jumps over the lazy dog.
-Sphinx of black quartz, judge my vow.
-Pack my box with five dozen liquor jugs.
-How vexingly quick daft zebras jump!`;
+const sentences = `The quick brown fox jumps over the lazy dog . Sphinx of black quartz, judge my vow . Pack my box with five dozen liquor jugs . How vexingly quick daft zebras jump !`;
+let currentSentenceIndex = 0;
+let startTime, endTime;
+let timerInterval;
 
-let startBtn = document.getElementById('start-btn');
-let inputField = document.getElementById('input');
-let paraEle = document.getElementById('sentence');
-let timerEle = document.getElementById('timer');
-let resultEle = document.getElementById('result');
-let retryEle = document.getElementById('retry-btn');
-let speedEle = document.getElementById('speed');
-let accuracyEle = document.getElementById('accuracy');
+const sentenceElement = document.getElementById('sentence');
+const inputElement = document.getElementById('input');
+const startButton = document.getElementById('start-btn');
+const timerElement = document.getElementById('timer');
+const speedElement = document.getElementById('speed');
+const accuracyElement = document.getElementById('accuracy');
+const resultElement = document.getElementById('result');
+const retryButton = document.getElementById('retry-btn');
 
-let seconds = 30;
-let timer;
-let startTime;
-
-startBtn.addEventListener('click', () => {
-	inputField.disabled = false;
-
-	paraEle.textContent = sentences;
-	timerEle.textContent = `Time left ${seconds}s`;
-	startBtn.disabled = true;
-
-	inputField.focus();
-	startTime = Date.now();
-	timerFun();
-});
-
-function timerFun() {
-	timer = setInterval(() => {
-		seconds--;
-		timerEle.textContent = `Time left ${seconds}s`;
-
-		if (seconds <= 0) {
-			clearInterval(timer);
-			timerEle.textContent = '';
-
-			resultDispay();
-		}
-	}, 1000);
+function startTest() {
+	sentenceElement.innerHTML = sentences;
+	inputElement.value = '';
+	inputElement.disabled = false;
+	inputElement.focus();
+	startButton.disabled = true;
+	startTime = new Date();
+	timerInterval = setInterval(updateTimer, 1000);
+	setTimeout(endTest, 30000); // End the test after 30 seconds
 }
 
-function resultDispay() {
-	resultEle.style.display = 'block';
-	inputField.disabled = true;
-	startBtn.disabled = true;
-
-	const typedText = inputField.value.trim();
-	const words = typedText.split(' ');
-	const correctWords = countCorrectWords(typedText);
-	const totalWords = sentences.split(' ').length;
-	const totalCharacters = sentences.length;
-	const correctCharacters = countCorrectCharacters(typedText);
-
-	const timeTaken = (Date.now() - startTime) / 1000; // in seconds
-	const typingSpeed = (correctWords / timeTaken) * 60;
-	const accuracy = (correctCharacters / totalCharacters) * 100;
-
-	speedEle.textContent = typingSpeed.toFixed(2);
-	accuracyEle.textContent = accuracy.toFixed(2);
-	// resultEle.innerHTML = `
-	//   <p>Typing Speed: ${typingSpeed.toFixed(2)} WPM</p>
-	//   <p>Accuracy: ${accuracy.toFixed(2)}%</p>
-	// `;
+function updateTimer() {
+	const currentTime = new Date();
+	const elapsedTime = Math.floor((currentTime - startTime) / 1000);
+	const remainingTime = 30 - elapsedTime;
+	const minutes = Math.floor(remainingTime / 60);
+	const seconds = remainingTime % 60;
+	timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds
+		.toString()
+		.padStart(2, '0')}`;
 }
 
-function countCorrectWords(typedText) {
-	const typedWords = typedText.split(' ');
-	const sentenceWords = sentences.split(' ');
+function endTest() {
+	clearInterval(timerInterval);
+	endTime = new Date();
+	const elapsedTime = Math.floor((endTime - startTime) / 1000);
+	const typedSentence = inputElement.value.trim();
+	const correctSentence = sentenceElement.textContent.trim();
 
-	let correctWords = 0;
-
-	for (let i = 0; i < typedWords.length; i++) {
-		if (typedWords[i] === sentenceWords[i]) {
-			correctWords++;
-		}
+	let speed = 0;
+	let typedWords = [];
+	if (typedSentence != '') {
+		typedWords = typedSentence.split(' ');
 	}
 
-	return correctWords;
-}
-
-function countCorrectCharacters(typedText) {
-	let correctCharacters = 0;
-
-	for (let i = 0; i < typedText.length; i++) {
-		if (typedText[i] === sentences[i]) {
-			correctCharacters++;
+	const correctWords = correctSentence.split(' ');
+	console.log(correctWords);
+	let correctCount = 0;
+	let ind = 0;
+	typedWords.forEach((word, index) => {
+		if (word === correctWords[index]) {
+			correctCount++;
+			ind = index;
 		}
+	});
+	if (typedSentence != '') {
+		speed = Math.floor((correctCount / 30) * 60);
 	}
-
-	return correctCharacters;
+	const accuracy = (correctCount / correctWords.length) * 100;
+	speedElement.textContent = speed;
+	accuracyElement.textContent = accuracy.toFixed(2);
+	resultElement.style.display = 'block';
+	retryButton.focus();
 }
 
-retryEle.addEventListener('click', () => {
-	resultEle.style.display = 'none';
-	startBtn.disabled = false;
-	inputField.disabled = false;
+startButton.addEventListener('click', startTest);
 
-	inputField.value = '';
-	seconds = 30;
-	timerEle.textContent = `Time left ${seconds}s`;
-
-	timerFun();
+retryButton.addEventListener('click', () => {
+	resultElement.style.display = 'none';
+	startButton.disabled = false;
+	inputElement.value = '';
 });
